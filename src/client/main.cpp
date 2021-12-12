@@ -5,9 +5,13 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_error.h>
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 
 const char *argv0;
+
+static SDL_Window *init_window(void);
+static SDL_Renderer *init_renderer(SDL_Window *);
 
 SDL_Window *
 init_window(void)
@@ -22,6 +26,19 @@ init_window(void)
 	if (window == nullptr)
 		errx(EXIT_FAILURE, "%s: window could not be created: %s\n", argv0, SDL_GetError());
 	return window;
+}
+
+SDL_Renderer *
+init_renderer(SDL_Window *window)
+{
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+	if (renderer == nullptr)
+		errx(EXIT_FAILURE, "%s: renderer could not be created: %s\n", argv0,
+		     SDL_GetError());
+	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+	SDL_RenderClear(renderer);
+	SDL_RenderPresent(renderer);
+	return renderer;
 }
 
 int
@@ -41,7 +58,11 @@ main(int argc, char **argv)
 
 	argv0 = argv[0];
 	SDL_Window *window = init_window();
+	SDL_Renderer *renderer = init_renderer(window);
 
+	getchar();
+
+	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return EXIT_SUCCESS;
