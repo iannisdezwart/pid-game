@@ -14,11 +14,9 @@ const char *argv0;
 static SDL_Window *init_window(void);
 static SDL_Renderer *init_renderer(SDL_Window *);
 
-struct Vec2
-{
+typedef struct {
 	float x, y;
-};
-typedef struct Vec2 Vec2;
+} Vec2;
 
 struct global_settings // ONE INSTANCE ONLY
 {
@@ -56,14 +54,15 @@ init_renderer(SDL_Window *window)
 }
 
 bool
-handle_input(SDL_Event& event)
+handle_input(SDL_Event &event)
 {
-	while(SDL_PollEvent(&event)) {
-		if(event.type == SDL_QUIT)
+	while (SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT)
 			return false;
-		const Uint8* kb_state = SDL_GetKeyboardState(NULL);
-		for(int i=0; i<7; i++) {
-			printf("%c %d\n", settings.kb_bindings[i], kb_state[settings.kb_bindings[i]]);
+		const Uint8 *kb_state = SDL_GetKeyboardState(NULL);
+		for (int i = 0; i < 7; i++) {
+			printf("%c %d\n", settings.kb_bindings[i],
+			       kb_state[settings.kb_bindings[i]]);
 		}
 	}
 	return true;
@@ -88,13 +87,13 @@ main(int argc, char **argv)
 	SDL_Window *window = init_window();
 	SDL_Renderer *renderer = init_renderer(window);
 
-	settings.kb_bindings[0]= SDL_SCANCODE_A;
-	settings.kb_bindings[1]= SDL_SCANCODE_B;
-	settings.kb_bindings[2]= SDL_SCANCODE_C;
-	settings.kb_bindings[3]= SDL_SCANCODE_D;
-	settings.kb_bindings[4]= SDL_SCANCODE_E;
-	settings.kb_bindings[5]= SDL_SCANCODE_F;
-	settings.kb_bindings[6]= SDL_SCANCODE_G;
+	settings.kb_bindings[0] = SDL_SCANCODE_A;
+	settings.kb_bindings[1] = SDL_SCANCODE_B;
+	settings.kb_bindings[2] = SDL_SCANCODE_C;
+	settings.kb_bindings[3] = SDL_SCANCODE_D;
+	settings.kb_bindings[4] = SDL_SCANCODE_E;
+	settings.kb_bindings[5] = SDL_SCANCODE_F;
+	settings.kb_bindings[6] = SDL_SCANCODE_G;
 
 	SDL_Event event;
 	bool running = true;
@@ -102,7 +101,6 @@ main(int argc, char **argv)
 		running = handle_input(event);
 	}
 
-event_loop_out:
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
