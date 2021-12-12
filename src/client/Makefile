@@ -1,5 +1,5 @@
 program	= pid_game
-objects	= main.o
+objects	= main.o keybindings.o
 
 LDFLAGS	= `pkg-config --cflags --libs sdl2`
 
@@ -9,6 +9,7 @@ ${program}: ${objects}
 
 
 main.o: main.cpp
+keybindings.o: keybindings.cpp keybindings.hpp
 
 .SUFFIXES: .cpp .o
 .cpp.o:
