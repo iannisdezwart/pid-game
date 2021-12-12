@@ -23,8 +23,8 @@
  * this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef INTERCONNECT_TYPES_H
-#define INTERCONNECT_TYPES_H
+#ifndef INTERCONNECT_PACKET_HPP
+#define INTERCONNECT_PACKET_HPP
 
 #include <bits/stdc++.h>
 
