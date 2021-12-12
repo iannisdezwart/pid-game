@@ -27,6 +27,7 @@
 #define INTERCONNECT_SOCKET_HPP
 
 #include <bits/stdc++.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -36,6 +37,8 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <errno.h>
+
+#include "packet.hpp"
 
 namespace interconnect
 {
@@ -88,9 +91,9 @@ struct socket_t
 	 * the error.
 	 */
 	size_t
-	send(char *data, size_t size)
+	send(uint8_t *data, size_t size)
 	{
-		packet_t packet;
+		packet::packet_t packet;
 
 		// Set the header values.
 
@@ -98,46 +101,50 @@ struct socket_t
 		packet.header.len = size;
 		packet.header.sent_at = now();
 
-		// Copy the header and the data into the buffer.
+		// Copy the data into the packet.
 
-		memcpy(packet.body, &header, sizeof(header_t));
-		memcpy(packet.body + sizeof(header_t), data, size);
+		memcpy(packet.body + sizeof(packet::header_t), data, size);
 
-		return ::send(fd, packet, sizeof(header_t) + size, 0);
+		// Send the packet through the socket.
+
+		return write(fd, (void *) &packet,
+			sizeof(packet::header_t) + size);
 	}
 
 	/**
 	 * Receive a packet through the socket.
-	 * Returns NULL on error. Errno is set to indicate the error.
+	 * Returns -1 on error. Errno is set to indicate the error.
 	 */
-	packet_t
-	receive()
+	int
+	receive(packet::packet_t &packet)
 	{
-		packet_t packet;
-
+		// TODO: check for truncation.
 		// Receive the header.
 
-		if (::recv(fd, &packet.header, sizeof(header_t), 0) == -1)
+		if (read(fd, &packet.header, sizeof(packet::header_t)) == -1)
 		{
-			return NULL;
+			return -1;
 		}
 
 		// Receive the body.
 
-		if (::recv(fd, packet.body, header.len, 0) == -1)
+		if (read(fd, packet.body, packet.header.len) == -1)
 		{
-			return NULL;
+			return -1;
 		}
 
 		// Check the checksum.
 
-		if (header.checksum != packet::hash(packet.body, header.len))
+		packet::hash_t checksum = packet::hash(packet.body,
+			packet.header.len);
+
+		if (packet.header.checksum != checksum)
 		{
 			errno = EBADMSG;
-			return NULL;
+			return -1;
 		}
 
-		return body;
+		return 0;
 	}
 };
 
@@ -238,6 +245,15 @@ struct server_socket_t : public socket_t
 		// Set socket to non-blocking mode.
 
 		set_nonblocking(fd);
+
+		// Listen for incoming connections.
+
+		if (listen(fd, 1) < 0)
+		{
+			fprintf(stderr, "Failed to listen on port %d: %s\n",
+				port, strerror(errno));
+			exit(1);
+		}
 	}
 };
 
