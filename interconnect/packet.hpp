@@ -33,6 +33,9 @@
 namespace interconnect::packet
 {
 
+// Maximum size of a packet.
+constexpr const size_t max_size = 1024;
+
 struct hash_t
 {
 	char hash[32];
@@ -69,6 +72,18 @@ struct header_t
 
 	// MD5 checksum of the body of the message.
 	hash_t checksum;
+};
+
+/**
+ * Structure that holds a packet header and a packet body.
+ */
+struct packet_t
+{
+	// The header of the packet.
+	header_t header;
+
+	// The body of the packet.
+	char body[max_size - sizeof(header_t)];
 };
 
 }

@@ -41,7 +41,19 @@ namespace interconnect
 {
 
 /**
- * @brief Puts a socket into non-blocking mode.
+ * Returns the number of microseconds since UNIX epoch.
+ */
+uint64_t
+now()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	return tv.tv_sec * 1000000 + tv.tv_usec;
+}
+
+/**
+ * Puts a socket into non-blocking mode.
  * When an IO operation is performed and there is no IO, the socket will
  * not wait until there is new IO, but simply skip the operation.
  * @param socket_fd The socket to put into non-blocking mode.
@@ -64,24 +76,83 @@ set_nonblocking(int socket_fd)
  * Structure that represents a socket.
  * Will be inherited by the server and client socket classes.
  */
-struct Socket
+struct socket_t
 {
 	// The socket file descriptor.
 	int fd;
+
+	/**
+	 * Send a packet through the socket.
+	 * The number of bytes which were sent is returned.
+	 * If an error occurred, -1 is returned and errno is set to indicate
+	 * the error.
+	 */
+	size_t
+	send(char *data, size_t size)
+	{
+		packet_t packet;
+
+		// Set the header values.
+
+		packet.header.checksum = packet::hash(data, size);
+		packet.header.len = size;
+		packet.header.sent_at = now();
+
+		// Copy the header and the data into the buffer.
+
+		memcpy(packet.body, &header, sizeof(header_t));
+		memcpy(packet.body + sizeof(header_t), data, size);
+
+		return ::send(fd, packet, sizeof(header_t) + size, 0);
+	}
+
+	/**
+	 * Receive a packet through the socket.
+	 * Returns NULL on error. Errno is set to indicate the error.
+	 */
+	packet_t
+	receive()
+	{
+		packet_t packet;
+
+		// Receive the header.
+
+		if (::recv(fd, &packet.header, sizeof(header_t), 0) == -1)
+		{
+			return NULL;
+		}
+
+		// Receive the body.
+
+		if (::recv(fd, packet.body, header.len, 0) == -1)
+		{
+			return NULL;
+		}
+
+		// Check the checksum.
+
+		if (header.checksum != packet::hash(packet.body, header.len))
+		{
+			errno = EBADMSG;
+			return NULL;
+		}
+
+		return body;
+	}
 };
 
 /**
  * Structure that represents a client socket.
  * This socket will connect to a server socket when initialised.
  */
-struct ClientSocket : public Socket
+struct client_socket_t : public socket_t
 {
 	/**
 	 * Creates a new client socket and connects to the server.
 	 * @param ip The IP address of the server.
 	 * @param port The port of the server.
 	 */
-	ClientSocket(char *ip, uint16_t port)
+	client_socket_t(char *ip, uint16_t port)
 	{
 		// The address of the server to connect to.
 
@@ -130,13 +201,13 @@ struct ClientSocket : public Socket
  * This socket will listen for incoming connections.
  * @param port The port to listen on.
  */
-struct ServerSocket : public Socket
+struct server_socket_t : public socket_t
 {
 	/**
 	 * Creates a new server socket and listens for incoming connections.
 	 * @param port The port to listen on.
 	 */
-	ServerSocket(uint16_t port)
+	server_socket_t(uint16_t port)
 	{
 		// Open a UDP socket.
 
