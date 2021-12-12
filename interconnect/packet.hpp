@@ -36,16 +36,43 @@ namespace interconnect::packet
 // Maximum size of a packet.
 constexpr const size_t max_size = 1024;
 
+/**
+ * Structure that holds a hash and an equality operator overload.
+ */
 struct hash_t
 {
-	char hash[32];
+	// Holds the bytes for the hash.
+	uint8_t hash[32];
+
+	/**
+	 * Checks whether this hash equals another hash.
+	 * Returns true if the hashes are equal, false otherwise.
+	 */
+	bool
+	operator==(hash_t other_hash)
+	{
+		return sodium_memcmp(hash, other_hash.hash, sizeof(hash)) == 0;
+	}
+
+	/**
+	 * Checks whether this hash does not equal another hash.
+	 * Returns true if the hashes are not equal, false otherwise.
+	 */
+	bool
+	operator!=(hash_t other_hash)
+	{
+		return !operator==(other_hash);
+	}
 };
 
-struct hash_t
-hash(char const *data, size_t size)
+/**
+ * Hashes `size` bytes of `data`.
+ */
+hash_t
+hash(uint8_t *data, size_t size)
 {
 	hash_t res;
-	crypto_generichash_blake2b(&res, sizeof(res), data, size, NULL, 0);
+	crypto_generichash_blake2b(res.hash, sizeof(res), data, size, NULL, 0);
 	return res;
 }
 
@@ -68,6 +95,7 @@ struct header_t
 	uint64_t sent_at;
 
 	// The length of the body in bytes.
+	// TODO: don't send over the wire.
 	uint32_t len;
 
 	// MD5 checksum of the body of the message.
@@ -83,7 +111,7 @@ struct packet_t
 	header_t header;
 
 	// The body of the packet.
-	char body[max_size - sizeof(header_t)];
+	uint8_t body[max_size - sizeof(header_t)];
 };
 
 }
