@@ -21,6 +21,13 @@ struct {
 	int res_x, res_y;
 } settings;
 
+void
+usage(void)
+{
+	fprintf(stderr, "Usage: %s [-r resolution] [-v]\n", argv0);
+	exit(EXIT_FAILURE);
+}
+
 SDL_Window *
 init_window(void)
 {
@@ -65,19 +72,23 @@ handle_input(SDL_Event &event)
 int
 main(int argc, char **argv)
 {
+	argv0 = argv[0];
+
 	int opt;
-	while ((opt = getopt(argc, argv, ":v")) != -1) {
+	while ((opt = getopt(argc, argv, ":r:v")) != -1) {
 		switch (opt) {
+		case 'r':
+			if (sscanf(optarg, "%dx%d", &settings.res_x, &settings.res_y) != 2)
+				usage();
+			break;
 		case 'v':
 			puts("PID Game v1.0");
 			return EXIT_SUCCESS;
 		default:
-			fprintf(stderr, "Usage: %s [-v]\n", argv[0]);
-			exit(EXIT_FAILURE);
+			usage();
 		}
 	}
 
-	argv0 = argv[0];
 	SDL_Window *window = init_window();
 	SDL_Renderer *renderer = init_renderer(window);
 
