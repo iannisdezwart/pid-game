@@ -17,7 +17,7 @@ enum client_message_type_t
  */
 struct client_message_t
 {
-	server_message_type_t type;
+	client_message_type_t type;
 	void *content;
 };
 }
