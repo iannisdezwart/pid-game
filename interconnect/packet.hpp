@@ -28,18 +28,22 @@
 
 #include <bits/stdc++.h>
 
+#include <sodium.h>
+
 namespace interconnect::packet
 {
 
 struct hash_t
 {
-	char hash[16];
+	char hash[32];
 };
 
 struct hash_t
-md5(char *data, size_t size)
+hash(char const *data, size_t size)
 {
-	// TODO: create
+	hash_t res;
+	crypto_generichash_blake2b(&res, sizeof(res), data, size, NULL, 0);
+	return res;
 }
 
 /**
