@@ -31,6 +31,17 @@
 namespace interconnect::packet
 {
 
+struct hash_t
+{
+	char hash[16];
+};
+
+struct hash_t
+md5(char *data, size_t size)
+{
+	// TODO: create
+}
+
 /**
  * A structure to represent a header of a UDP packet.
  *
@@ -53,7 +64,7 @@ struct header_t
 	uint32_t len;
 
 	// MD5 checksum of the body of the message.
-	char checksum[16];
+	hash_t checksum;
 };
 
 }
