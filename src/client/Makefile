@@ -1,7 +1,7 @@
 program	= pid_game
 objects	= main.o
 
-LDFLAGS	= $(shell pkg-config --cflags --libs sdl2)
+LDFLAGS	= `pkg-config --cflags --libs sdl2`
 
 all: ${program}
 ${program}: ${objects}
