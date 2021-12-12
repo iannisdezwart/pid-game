@@ -1,6 +1,8 @@
 #ifndef __KEYBINDINGS_H_
 #define __KEYBINDINGS_H_
 
+#include <SDL2/SDL_scancode.h>
+
 typedef enum {
 	MOVE_UP,
 	MOVE_LEFT,
@@ -11,6 +13,6 @@ typedef enum {
 	ESCAPE
 } keytype_t;
 
-SDL_Scancode *load_keybindings(void);
+void load_keybindings(SDL_Scancode *);
 
 #endif /* !__KEYBINDINGS_H_ */

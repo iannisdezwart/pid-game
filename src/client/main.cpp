@@ -4,10 +4,8 @@
 #include <unistd.h>
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_error.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_video.h>
+
+#include "keybindings.hpp"
 
 const char *argv0;
 
@@ -18,11 +16,9 @@ typedef struct {
 	float x, y;
 } Vec2;
 
-struct global_settings // ONE INSTANCE ONLY
-{
-	char kb_bindings[7];
+struct {
+	SDL_Scancode kb_bindings[7];
 	int res_x, res_y;
-
 } settings;
 
 SDL_Window *
@@ -60,10 +56,8 @@ handle_input(SDL_Event &event)
 		if (event.type == SDL_QUIT)
 			return false;
 		const Uint8 *kb_state = SDL_GetKeyboardState(NULL);
-		for (int i = 0; i < 7; i++) {
-			printf("%c %d\n", settings.kb_bindings[i],
-			       kb_state[settings.kb_bindings[i]]);
-		}
+		for (int i = 0; i < 7; i++)
+			printf("%d %d\n", settings.kb_bindings[i], kb_state[settings.kb_bindings[i]]);
 	}
 	return true;
 }
@@ -87,13 +81,7 @@ main(int argc, char **argv)
 	SDL_Window *window = init_window();
 	SDL_Renderer *renderer = init_renderer(window);
 
-	settings.kb_bindings[0] = SDL_SCANCODE_A;
-	settings.kb_bindings[1] = SDL_SCANCODE_B;
-	settings.kb_bindings[2] = SDL_SCANCODE_C;
-	settings.kb_bindings[3] = SDL_SCANCODE_D;
-	settings.kb_bindings[4] = SDL_SCANCODE_E;
-	settings.kb_bindings[5] = SDL_SCANCODE_F;
-	settings.kb_bindings[6] = SDL_SCANCODE_G;
+	load_keybindings(settings.kb_bindings);
 
 	SDL_Event event;
 	bool running = true;
