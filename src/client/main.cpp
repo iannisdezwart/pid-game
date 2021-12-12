@@ -5,6 +5,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_error.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 
@@ -60,8 +61,15 @@ main(int argc, char **argv)
 	SDL_Window *window = init_window();
 	SDL_Renderer *renderer = init_renderer(window);
 
-	getchar();
+	SDL_Event input;
+	while (true) {
+		while (SDL_PollEvent(&input)) {
+			if (input.type == SDL_QUIT)
+				goto event_loop_out;
+		}
+	}
 
+event_loop_out:
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
