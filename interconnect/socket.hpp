@@ -76,90 +76,20 @@ set_nonblocking(int socket_fd)
 }
 
 /**
- * Structure that represents a socket.
- * Will be inherited by the server and client socket classes.
+ * Structure that represents a client socket.
+ * This socket will connect to a server socket when initialised.
  */
-struct socket_t
+struct client_socket_t
 {
 	// The socket file descriptor.
 	int fd;
 
 	/**
-	 * Send a packet through the socket.
-	 * The number of bytes which were sent is returned.
-	 * If an error occurred, -1 is returned and errno is set to indicate
-	 * the error.
-	 */
-	size_t
-	send(uint8_t *data, size_t size)
-	{
-		packet::packet_t packet;
-
-		// Set the header values.
-
-		packet.header.checksum = packet::hash(data, size);
-		packet.header.len = size;
-		packet.header.sent_at = now();
-
-		// Copy the data into the packet.
-
-		memcpy(packet.body + sizeof(packet::header_t), data, size);
-
-		// Send the packet through the socket.
-
-		return write(fd, (void *) &packet,
-			sizeof(packet::header_t) + size);
-	}
-
-	/**
-	 * Receive a packet through the socket.
-	 * Returns -1 on error. Errno is set to indicate the error.
-	 */
-	int
-	receive(packet::packet_t &packet)
-	{
-		// TODO: check for truncation.
-		// Receive the header.
-
-		if (read(fd, &packet.header, sizeof(packet::header_t)) == -1)
-		{
-			return -1;
-		}
-
-		// Receive the body.
-
-		if (read(fd, packet.body, packet.header.len) == -1)
-		{
-			return -1;
-		}
-
-		// Check the checksum.
-
-		packet::hash_t checksum = packet::hash(packet.body,
-			packet.header.len);
-
-		if (packet.header.checksum != checksum)
-		{
-			errno = EBADMSG;
-			return -1;
-		}
-
-		return 0;
-	}
-};
-
-/**
- * Structure that represents a client socket.
- * This socket will connect to a server socket when initialised.
- */
-struct client_socket_t : public socket_t
-{
-	/**
 	 * Creates a new client socket and connects to the server.
 	 * @param ip The IP address of the server.
 	 * @param port The port of the server.
 	 */
-	client_socket_t(char *ip, uint16_t port)
+	client_socket_t(const char *ip, uint16_t port)
 	{
 		// The address of the server to connect to.
 
@@ -201,6 +131,67 @@ struct client_socket_t : public socket_t
 
 		set_nonblocking(fd);
 	}
+
+
+	/**
+	 * Send a packet through the socket.
+	 * The number of bytes which were sent is returned.
+	 * If an error occurred, -1 is returned and errno is set to indicate
+	 * the error.
+	 */
+	size_t
+	send(uint8_t *data, size_t size)
+	{
+		packet::packet_t packet;
+
+		// Set the header values.
+
+		packet.header.checksum = packet::hash(data, size);
+		packet.header.len = size;
+		packet.header.sent_at = now();
+
+		// Copy the data into the packet.
+
+		memcpy(packet.body + sizeof(packet::header_t), data, size);
+
+		// Send the packet through the socket.
+
+		return write(fd, (void *) &packet,
+			sizeof(packet::header_t) + size);
+	}
+
+	/**
+	 * Receive a packet through the socket.
+	 * Returns -1 on error. Errno is set to indicate the error.
+	 */
+	int
+	receive(packet::packet_t &packet)
+	{
+		// Receive the packet.
+
+		struct sockaddr_in client_addr;
+
+		if (read(fd, &packet, sizeof(packet::packet_t)) == -1)
+		{
+			return -1;
+		}
+
+		// TODO: check for truncation.
+		// Check the checksum.
+
+		packet::hash_t checksum = packet::hash(packet.body,
+			packet.header.len);
+
+		// Check if the body was corrupted.
+
+		if (packet.header.checksum != checksum)
+		{
+			errno = EBADMSG;
+			return -1;
+		}
+
+		return 0;
+	}
 };
 
 /**
@@ -208,8 +199,11 @@ struct client_socket_t : public socket_t
  * This socket will listen for incoming connections.
  * @param port The port to listen on.
  */
-struct server_socket_t : public socket_t
+struct server_socket_t
 {
+	// The socket file descriptor.
+	int fd;
+
 	/**
 	 * Creates a new server socket and listens for incoming connections.
 	 * @param port The port to listen on.
@@ -245,15 +239,6 @@ struct server_socket_t : public socket_t
 		// Set socket to non-blocking mode.
 
 		set_nonblocking(fd);
-
-		// Listen for incoming connections.
-
-		if (listen(fd, 1) < 0)
-		{
-			fprintf(stderr, "Failed to listen on port %d: %s\n",
-				port, strerror(errno));
-			exit(1);
-		}
 	}
 };
 
