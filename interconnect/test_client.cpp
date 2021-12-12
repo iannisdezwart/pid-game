@@ -18,9 +18,23 @@ main()
 	interconnect::client_socket_t socket("127.0.0.1", 1337);
 	socket.send(payload, sizeof(payload));
 
-	interconnect::packet::packet_t packet;
-	socket.receive(packet);
-	packet.print();
+	while (true)
+	{
+		interconnect::packet::packet_t packet;
+
+		if (socket.receive(packet) < 0)
+		{
+			if (errno != EAGAIN)
+			{
+				printf("receive() failed: %s\n",
+					strerror(errno));
+			}
+
+			continue;
+		}
+
+		packet.print();
+	}
 
 	return 0;
 }

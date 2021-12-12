@@ -13,7 +13,7 @@ main()
 		exit(1);
 	}
 
-	const uint8_t payload[] = "Response!!!!!";
+	uint8_t payload[] = "Response!!!!!";
 
 	interconnect::server_socket_t socket(1337);
 
@@ -24,18 +24,17 @@ main()
 
 		if (socket.receive(packet, client_addr) < 0)
 		{
-			if (errno == EAGAIN)
-			{
-				continue;
-			}
-			else
+			if (errno != EAGAIN)
 			{
 				printf("receive() failed: %s\n",
 					strerror(errno));
 			}
+
+			continue;
 		}
 
 		packet.print();
+		socket.send(payload, sizeof(payload), client_addr);
 	}
 
 
