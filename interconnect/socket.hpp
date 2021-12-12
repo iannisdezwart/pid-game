@@ -139,7 +139,7 @@ struct client_socket_t
 	 * If an error occurred, -1 is returned and errno is set to indicate
 	 * the error.
 	 */
-	size_t
+	ssize_t
 	send(uint8_t *data, size_t size)
 	{
 		packet::packet_t packet;
@@ -239,6 +239,73 @@ struct server_socket_t
 		// Set socket to non-blocking mode.
 
 		set_nonblocking(fd);
+	}
+
+	/**
+	 * Send a packet through the socket.
+	 * The client to send to is specified by `client_addr`.
+	 * The number of bytes which were sent is returned.
+	 * If an error occurred, -1 is returned and errno is set to indicate
+	 * the error.
+	 */
+	ssize_t
+	send(uint8_t *data, size_t size, struct sockaddr_in &client_addr)
+	{
+		packet::packet_t packet;
+
+		// Set the header values.
+
+		packet.header.checksum = packet::hash(data, size);
+		packet.header.len = size;
+		packet.header.sent_at = now();
+
+		// Copy the data into the packet.
+
+		memcpy(packet.body + sizeof(packet::header_t), data, size);
+
+		// Send the packet through the socket.
+
+		return sendto(fd, (void *) &packet,
+			sizeof(packet::header_t) + size, 0,
+			(struct sockaddr *) &client_addr,
+			sizeof(client_addr));
+	}
+
+	/**
+	 * Receive a packet through the socket.
+	 * The client that sent the packet is stored in the `client_addr`
+	 * passed by reference.
+	 * Returns -1 on error. Errno is set to indicate the error.
+	 */
+	int
+	receive(packet::packet_t &packet, struct sockaddr_in &client_addr)
+	{
+		// Receive the packet.
+
+		socklen_t client_addr_len = sizeof(client_addr);
+
+		if (recvfrom(fd, &packet, sizeof(packet::packet_t), 0,
+			(struct sockaddr *) &client_addr, &client_addr_len)
+			== -1)
+		{
+			return -1;
+		}
+
+		// TODO: check for truncation.
+		// Check the checksum.
+
+		packet::hash_t checksum = packet::hash(packet.body,
+			packet.header.len);
+
+		// Check if the body was corrupted.
+
+		if (packet.header.checksum != checksum)
+		{
+			errno = EBADMSG;
+			return -1;
+		}
+
+		return 0;
 	}
 };
 
