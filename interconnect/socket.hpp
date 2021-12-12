@@ -152,7 +152,7 @@ struct client_socket_t
 
 		// Copy the data into the packet.
 
-		memcpy(packet.body + sizeof(packet::header_t), data, size);
+		memcpy(packet.body, data, size);
 
 		// Send the packet through the socket.
 
@@ -261,7 +261,7 @@ struct server_socket_t
 
 		// Copy the data into the packet.
 
-		memcpy(packet.body + sizeof(packet::header_t), data, size);
+		memcpy(packet.body, data, size);
 
 		// Send the packet through the socket.
 

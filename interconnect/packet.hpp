@@ -112,6 +112,27 @@ struct packet_t
 
 	// The body of the packet.
 	uint8_t body[max_size - sizeof(header_t)];
+
+	/**
+	 * Prints a packet for debugging purposes.
+	 */
+	void
+	print()
+	{
+		printf("Packet:\n");
+		printf("\tsent_at: %lu\n", header.sent_at);
+		printf("\tlen: %u\n", header.len);
+		printf("\tchecksum: ");
+
+		for (size_t i = 0; i < sizeof(header.checksum.hash); i++)
+		{
+			printf("%02x", header.checksum.hash[i]);
+		}
+
+		printf("\n");
+		printf("\tbody: ");
+		printf("\t%s\n", body);
+	}
 };
 
 }
