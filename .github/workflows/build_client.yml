@@ -31,7 +31,11 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Switch to client branch
-        run: git checkout -b client
+        run: git checkout client
+        
+      # Git Status
+      - name: Git Status
+        run: git status
         
       # Compiles with make
       - name: Compile the client
