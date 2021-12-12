@@ -31,7 +31,7 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Switch to client branch
-        run: git checkout client
+        run: ls
         
       # Git Status
       - name: Git Status
