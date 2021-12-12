@@ -33,7 +33,7 @@ jobs:
         
       # Go to client and make
       - name: Go to client and make
-        run: cd $GITHUB_WORKSPACE/src/client && make
+        run: cd $GITHUB_WORKSPACE/src/client && make && ls
         
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.3.0
