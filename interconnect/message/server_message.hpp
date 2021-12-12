@@ -3,29 +3,18 @@
 
 #include "model/object.hpp"
 
+using namespace interconnect::model;
+
 namespace interconnect::message
 {
 
-struct server_message_object_creation_t
-{
-	model::object_t object;
-};
-
-/**
- * Enum for types of messages that can be sent from server to client
- */
-enum server_message_type_t
-{
-	object_creation
-};
-
-/**
- * Definition of a high-level message from server to client
- */
 struct server_message_t
 {
-	server_message_type_t type;
-	void *content;
+};
+
+struct server_message_object_creation_t : public server_message_t
+{
+	object_t object;
 };
 }
 

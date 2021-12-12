@@ -2,14 +2,14 @@
 #define GAME_HPP
 
 #include <bits/stdc++.h>
+#include <model/object.hpp>
 
 namespace interconnect::model
 {
 
 struct game_t
 {
-	uint16_t objects_size;
-	void *objects;
+	std::vector<object_t> objects;
 };
 
 }
