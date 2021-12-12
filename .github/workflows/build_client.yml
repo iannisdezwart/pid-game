@@ -33,7 +33,7 @@ jobs:
         
       # Go to client
       - name: Go to client
-        run: cd src/client
+        run: cd src/client && ls
         
       # Compiles with make
       - name: Compile the client
