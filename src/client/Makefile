@@ -11,7 +11,7 @@ ${program}: ${objects}
 main.o: main.cpp
 
 .SUFFIXES: .cpp .o
-.cxx.o:
+.cpp.o:
 	${CXX} ${CXXFLAGS} -c $<
 
 .PHONY: clean
